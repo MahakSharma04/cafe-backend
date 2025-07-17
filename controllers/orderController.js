@@ -24,17 +24,29 @@ const showOrders = async (req, res) => {
 
 const showAllOrders = async (req, res) => {
   try {
-    const { status = "", page = 1, limit = 5 } = req.query;
+    const { status = "", page = 1, limit = 3 } = req.query;
     const skip = (page - 1) * limit;
-    const count = await orderModel.countDocuments();
+
+    const filter = {
+      status: { $regex: status, $options: "i" },
+    };
+
+    const count = await orderModel.countDocuments(filter);
     const total = Math.ceil(count / limit);
-    const result = await orderModel.find({ status: { $regex: status } });
-    res.status(200).json({ orders:result, total });
+
+    const result = await orderModel
+      .find(filter)
+      .skip(parseInt(skip))
+      .limit(parseInt(limit))
+      .sort({ updatedAt: -1 });
+
+    res.status(200).json({ orders: result, total });
   } catch (err) {
     console.log(err);
     res.status(500).json({ message: "Something went wrong" });
   }
 };
+
 
 const updateOrder = async (req, res) => {
   try {
@@ -52,17 +64,3 @@ const updateOrder = async (req, res) => {
 };
 
 export { newOrder, showOrders, showAllOrders, updateOrder };
-
-// npm init -y for package.json
-// package.json mn type: module then only export and import will work
-// npm i express mongoose dotenv cors
-// npm i bcrypt jsonwebtoken
-// npm i nodemon --save-dev
-// index.js server.js initialize krna h import express and 8080 port dena h
-// folders controllers, models, routes, middlewares
-// model dena h - schema (data)
-// then controllers - crud operations (export them)
-// then routes (import controllers and define routes - express.Router())
-// routes - users(admin(middlewares), user)
-// then server.js - routing with prefixes , taken from routes folder
-// then check in postman
